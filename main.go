@@ -32,6 +32,7 @@ func main() {
 	token := login(cfg.Section("").Key("username").String(), cfg.Section("").Key("password").String())
 
 	app := &cli.App{
+		Description: "Webshare.cz CLI",
 		Commands: []*cli.Command{
 			{
 				Name:  "ls",
@@ -59,7 +60,7 @@ func main() {
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:        "l",
-						Usage:       "language for the greeting",
+						Usage:       "long list",
 						Destination: &detailed_list,
 					},
 				},
@@ -82,7 +83,7 @@ func main() {
 			},
 			{
 				Name:  "get",
-				Usage: "get download link for given file",
+				Usage: "get download link for given file or download it (-d)",
 				Action: func(cCtx *cli.Context) error {
 					if cCtx.Args().First() == "" {
 						fmt.Println("No file given")
@@ -103,7 +104,7 @@ func main() {
 					},
 					&cli.BoolFlag{
 						Name:        "d",
-						Usage:       "get download link and download the file",
+						Usage:       "download the file",
 						Destination: &download,
 					},
 				},
