@@ -33,7 +33,7 @@ func main() {
 	token := login(cfg.Section("").Key("username").String(), cfg.Section("").Key("password").String())
 
 	app := &cli.App{
-		Description: "Webshare.cz CLI",
+		UseShortOptionHandling: true,
 		Commands: []*cli.Command{
 			{
 				Name:  "ls",
