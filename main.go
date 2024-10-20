@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"text/tabwriter"
 
 	"github.com/urfave/cli/v2"
@@ -33,11 +34,13 @@ func main() {
 	token := login(cfg.Section("").Key("username").String(), cfg.Section("").Key("password").String())
 
 	app := &cli.App{
+		Usage:                  "Webshare.cz CLI",
 		UseShortOptionHandling: true,
 		Commands: []*cli.Command{
 			{
-				Name:  "ls",
-				Usage: "list files in given path",
+				Name:      "ls",
+				Usage:     "list files in given path",
+				UsageText: "wscli ls [command options] PATH",
 				Action: func(cCtx *cli.Context) error {
 					file_response := files(token, cCtx.Args().First(), !public_folder)
 					w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
@@ -72,17 +75,18 @@ func main() {
 				},
 			},
 			{
-				Name:  "rm",
-				Usage: "remove file in given path",
+				Name:      "rm",
+				Usage:     "remove file in given path",
+				UsageText: "wscli rm [command options] PATH/IDENT",
 				Action: func(cCtx *cli.Context) error {
-					fmt.Println(remove_file(token, cCtx.Args().First(), translate_ident_type(ident_type)))
+					fmt.Println(remove_file(token, cCtx.Args().First(), translate_ident_type(ident_type), !public_folder))
 					return nil
 				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:        "t",
 						Value:       "f",
-						Usage:       "type of file identification - f filename (default), u url, i ident",
+						Usage:       "type of file identification - f filename, i ident",
 						Destination: &ident_type,
 					},
 					&cli.BoolFlag{
@@ -93,8 +97,9 @@ func main() {
 				},
 			},
 			{
-				Name:  "get",
-				Usage: "get download link for given file or download it (-d)",
+				Name:      "get",
+				Usage:     "get download link for given file or download it (-d)",
+				UsageText: "wscli get [command options] PATH/IDENT/URL",
 				Action: func(cCtx *cli.Context) error {
 					if cCtx.Args().First() == "" {
 						fmt.Println("No file given")
@@ -110,7 +115,7 @@ func main() {
 					&cli.StringFlag{
 						Name:        "t",
 						Value:       "f",
-						Usage:       "type of file identification - f filename (default), u url, i ident",
+						Usage:       "type of file identification - f filename, u url, i ident",
 						Destination: &ident_type,
 					},
 					&cli.BoolFlag{
@@ -126,8 +131,9 @@ func main() {
 				},
 			},
 			{
-				Name:  "upload",
-				Usage: "upload given file",
+				Name:      "upload",
+				Usage:     "upload given local file to remote path",
+				UsageText: "wscli upload [command options] LOCAL_PATH PATH",
 				Action: func(cCtx *cli.Context) error {
 					if cCtx.Args().First() == "" {
 						fmt.Println("No file given")
@@ -146,14 +152,17 @@ func main() {
 				},
 			},
 			{
-				Name:  "status",
-				Usage: "show user data",
+				Name:      "status",
+				Usage:     "show user data",
+				UsageText: "wscli status",
 				Action: func(cCtx *cli.Context) error {
 					user_stats := user_data(token)
 					fmt.Printf("%s (%s)\n", user_stats.Username, user_stats.Id)
 					fmt.Println("Email: " + user_stats.Email)
 					fmt.Println("VIP until " + user_stats.VipUntil)
-					fmt.Printf("Usage: %s/%s\n", user_stats.Bytes, user_stats.Space)
+					used, _ := strconv.Atoi(user_stats.Bytes)
+					space, _ := strconv.Atoi(user_stats.Space)
+					fmt.Printf("Usage: %s/%s (%.2f%%)\n", user_stats.Bytes, user_stats.Space, 100*float64(used)/float64(space))
 					return nil
 				},
 			},
