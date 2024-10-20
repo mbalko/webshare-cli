@@ -17,10 +17,10 @@ import (
 	_ "github.com/GehirnInc/crypt/md5_crypt"
 )
 
-func find_ident(token string, filename string) string {
+func find_ident(token string, filename string, private bool) string {
 	dir := path.Dir(filename)
 
-	file_list := files(token, dir, true)
+	file_list := files(token, dir, private)
 
 	for i := 0; i < len(file_list.Files); i++ {
 		if path.Base(filename) == file_list.Files[i].Name {
@@ -84,7 +84,7 @@ func files(token string, path string, private bool) FilesResponse {
 	return files_response
 }
 
-func file_link(token string, ident string, download bool, ident_type int8) string {
+func file_link(token string, ident string, download bool, ident_type int8, private bool) string {
 	var url string = WEBSHARE + "/file_link/"
 	var file_link_response FileLinkResponse
 
@@ -92,7 +92,7 @@ func file_link(token string, ident string, download bool, ident_type int8) strin
 	case IDENT_TYPE_URL:
 		ident = strings.Split(strings.Split(ident, "file/")[1], "/")[0]
 	case IDENT_TYPE_FILENAME:
-		ident = find_ident(token, ident)
+		ident = find_ident(token, ident, private)
 		if ident == "" {
 			return "FATAL - File not found"
 		}
@@ -126,26 +126,30 @@ func file_link(token string, ident string, download bool, ident_type int8) strin
 	return file_link_response.Link
 }
 
-func normal_link(token string, ident string, ident_type int8) string {
+func normal_link(token string, ident string, ident_type int8, private bool) string {
 	if ident_type == IDENT_TYPE_FILENAME {
-		ident = find_ident(token, ident)
+		ident = find_ident(token, ident, private)
 	}
 	return "https://webshare.cz/#/file/" + ident
 }
 
-func remove_file(token string, ident string, ident_type int8) bool {
+func remove_file(token string, ident string, ident_type int8, private bool) bool {
 	var url string = WEBSHARE + "/remove_file/"
 	if ident_type == IDENT_TYPE_FILENAME {
-		ident = find_ident(token, ident)
+		ident = find_ident(token, ident, private)
 	}
 	data := "wst=" + token + "&ident=" + ident
 	req := post_request(url, data)
 	return verify_request(req)
 }
 
-func upload(token string, file_path string, folder string) string {
+func upload(token string, file_path string, folder string, private bool) string {
 	var url string = WEBSHARE + "/upload_url/"
 	var url_response UrlResponse
+	var private_folder string = "1"
+	if !private {
+		private_folder = "0"
+	}
 	req := post_request(url, "")
 	if !verify_request(req) {
 		return "FATAL - upload_url"
@@ -159,7 +163,7 @@ func upload(token string, file_path string, folder string) string {
 	writer := multipart.NewWriter(body)
 	writer.WriteField("wst", token)
 	writer.WriteField("folder", folder)
-	writer.WriteField("private", "1")
+	writer.WriteField("private", private_folder)
 	writer.WriteField("adult", "0")
 	file_stat, _ := file.Stat()
 	writer.WriteField("total", strconv.FormatInt(file_stat.Size(), 10))

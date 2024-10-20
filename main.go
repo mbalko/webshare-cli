@@ -25,6 +25,7 @@ func main() {
 		detailed_list bool
 		ident_type    string
 		download      bool
+		public_folder bool
 	)
 
 	cfg := load_config()
@@ -38,7 +39,7 @@ func main() {
 				Name:  "ls",
 				Usage: "list files in given path",
 				Action: func(cCtx *cli.Context) error {
-					file_response := files(token, cCtx.Args().First(), true)
+					file_response := files(token, cCtx.Args().First(), !public_folder)
 					w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 					for _, folder := range file_response.Folders {
 						fmt.Fprint(w, "D")
@@ -63,6 +64,11 @@ func main() {
 						Usage:       "long list",
 						Destination: &detailed_list,
 					},
+					&cli.BoolFlag{
+						Name:        "p",
+						Usage:       "list files in public folder",
+						Destination: &public_folder,
+					},
 				},
 			},
 			{
@@ -79,6 +85,11 @@ func main() {
 						Usage:       "type of file identification - f filename (default), u url, i ident",
 						Destination: &ident_type,
 					},
+					&cli.BoolFlag{
+						Name:        "p",
+						Usage:       "remove from public folder",
+						Destination: &public_folder,
+					},
 				},
 			},
 			{
@@ -89,7 +100,7 @@ func main() {
 						fmt.Println("No file given")
 						return nil
 					}
-					file_link := file_link(token, cCtx.Args().First(), download, translate_ident_type(ident_type))
+					file_link := file_link(token, cCtx.Args().First(), download, translate_ident_type(ident_type), !public_folder)
 					if !download {
 						fmt.Println(file_link)
 					}
@@ -107,6 +118,11 @@ func main() {
 						Usage:       "download the file",
 						Destination: &download,
 					},
+					&cli.BoolFlag{
+						Name:        "p",
+						Usage:       "download from public folder",
+						Destination: &public_folder,
+					},
 				},
 			},
 			{
@@ -118,8 +134,15 @@ func main() {
 						return nil
 					}
 					fmt.Printf("Uploading %s - ", cCtx.Args().First())
-					fmt.Println(normal_link(EMPTY_TOKEN, upload(token, cCtx.Args().First(), cCtx.Args().Get(1)), IDENT_TYPE_IDENT))
+					fmt.Println(normal_link(EMPTY_TOKEN, upload(token, cCtx.Args().First(), cCtx.Args().Get(1), !public_folder), IDENT_TYPE_IDENT, !public_folder))
 					return nil
+				},
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:        "p",
+						Usage:       "upload as public",
+						Destination: &public_folder,
+					},
 				},
 			},
 			{
