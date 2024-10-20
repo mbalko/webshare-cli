@@ -9,10 +9,14 @@ go build .
 
 ## Before you start using it
 
-Copy `wscli.sample` to `~/.wscli` and fill the `username` and `password` fields
+- Copy `wscli.sample` to `~/.wscli` and fill `username` and `password` fields
+- Copy `wscli` binary to any path stored in `$PATH`
+- Ensure `wscli status` returns correct values for your Webshare.cz account
+
 
 ## Usage
 
 ```
-wscli -h
+$ wscli -h
+$ wscli [command] -h
 ```
